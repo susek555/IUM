@@ -15,7 +15,6 @@ _text_features = [
 ]
 
 _location_features = [
-    "neighbourhood_cleansed",
     "latitude",
     "longitude",
 ]
