@@ -9,12 +9,12 @@ def load_data(filepath: str) -> pd.DataFrame:
     df = pd.read_csv(filepath, usecols=['id', 'latitude', 'longitude'])
     return df
 
-def group_listings_by_region(df: pd.DataFrame, min_cluster_size: int = 15) -> pd.DataFrame:
+def group_listings_by_region(df: pd.DataFrame, min_cluster_size: int = 15, min_samples: int = 1) -> pd.DataFrame:
     coords_rad = np.radians(df[['latitude', 'longitude']].to_numpy())
 
     clusterer = HDBSCAN(
         min_cluster_size=min_cluster_size,
-        min_samples=1,
+        min_samples=min_samples,
         metric='haversine',
         cluster_selection_method='eom'
     )
@@ -26,8 +26,8 @@ def group_listings_by_region(df: pd.DataFrame, min_cluster_size: int = 15) -> pd
 
     return df
 
-def visualize_regions(df: pd.DataFrame, min_cluster_size: int) -> None:
-# def visualize_regions(df: pd.DataFrame) -> None:
+# def visualize_regions(df: pd.DataFrame, min_cluster_size: int) -> None:
+def visualize_regions(df: pd.DataFrame) -> None:
     fig, ax = plt.subplots(figsize=(14, 14))
     noise = df[df['cluster'] == -1]
     ax.scatter(
@@ -92,15 +92,17 @@ def visualize_regions(df: pd.DataFrame, min_cluster_size: int) -> None:
     plt.ylabel("Latitude")
 
     plt.tight_layout()
-    # plt.show()
-    plt.savefig(f"./results/regions_analysis_min_cluster_{min_cluster_size}.png", dpi=300)
+    plt.show()
+    # plt.savefig(f"./results/regions_analysis_min_cluster_{min_cluster_size}.png", dpi=300)
 
 
 if __name__ == "__main__":
     df_listings = load_data("./data/listings.csv")
+    df_listings = group_listings_by_region(df_listings, min_cluster_size=15, min_samples=1)
+    visualize_regions(df_listings)
 
-    for i in range(10, 25):
-        df_listings = group_listings_by_region(df_listings, min_cluster_size=i)
-        visualize_regions(df_listings, min_cluster_size=i)
+    # for i in range(10, 25):
+    #     df_listings = group_listings_by_region(df_listings, min_cluster_size=i, min_samples=1)
+    #     visualize_regions(df_listings, min_cluster_size=i)
 
-        print(f"Wyniki analizy zapisane dla min_cluster_size={i}.\n")
+    #     print(f"Wyniki analizy zapisane dla min_cluster_size={i}.\n")
