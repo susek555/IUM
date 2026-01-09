@@ -44,5 +44,17 @@ INITIAL_FEATURES = (
     + _availability_features
 )
 
-TARGET = ["price"]
+AMENITIES = [
+    "dishwasher",
+    "iron",
+    "toaster",
+    "oven",
+    "kitchen",
+    "microwave",
+    "crib",
+    "dining table",
+    "Free dryer \u2013 In unit",
+    "Pack \u2019n play/Travel crib",
+]
 
+TARGET = ["price"]
