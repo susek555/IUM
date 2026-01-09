@@ -86,13 +86,13 @@ def drop_bathroom_text_column(df: pd.DataFrame) -> pd.DataFrame:
 def transformation_pipeline(listings: pd.DataFrame) -> pd.DataFrame:
     listings = select_features(listings, INITIAL_FEATURES, TARGET)
 
-    listings = convert_price_to_number(listings)
-    listings = transform_price(listings)
-
     listings = add_is_luxury_attribute(listings)
 
     listings = fill_bathrooms_values_from_text(listings)
     listings = add_is_bathroom_shared_attribute(listings)
     listings = drop_bathroom_text_column(listings)
+
+    listings = convert_price_to_number(listings)
+    listings = transform_price(listings)
 
     return listings
