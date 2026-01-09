@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+import ast
 
-from src.features import INITIAL_FEATURES, TARGET
+from src.features import INITIAL_FEATURES, TARGET, AMENITIES
 
 
 def select_features(
@@ -78,9 +79,33 @@ def drop_bathroom_text_column(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop(columns=["bathrooms_text"])
     return df
 
+def normalize_text(text: str) -> str:
+    return (text.lower()
+            .replace("\u2013", "-")
+            .replace("\u2014", "-")
+            .replace("\u2019", "'")
+            .strip())
 
-# def add_amenities_as_attributes(listings: pd.DataFrame) -> pd.DataFrame:
-#     amenities = listings["amenities"]
+def encode_amenities_one_hot(df: pd.DataFrame) -> pd.DataFrame:
+    temp_amenities = df['amenities'].apply(
+        lambda x: set(normalize_text(a) for a in ast.literal_eval(x))
+        if pd.notna(x) and isinstance(x, str) and x.startswith('[') else set()
+    )
+
+    new_columns_data = {}
+
+    for amenity in AMENITIES:
+        search_key = normalize_text(amenity)
+        clean_col_name = f'amenity_{amenity.strip().replace(" ", "_").replace("/", "_").lower()}'
+        new_columns_data[clean_col_name] = temp_amenities.apply(
+            lambda tags: 1 if search_key in tags else 0
+        )
+
+    new_df = pd.DataFrame(new_columns_data, index=df.index)
+    df = pd.concat([df, new_df], axis=1)
+
+    df = df.drop(columns=['amenities'])
+    return df
 
 
 def transformation_pipeline(listings: pd.DataFrame) -> pd.DataFrame:
@@ -94,5 +119,7 @@ def transformation_pipeline(listings: pd.DataFrame) -> pd.DataFrame:
 
     listings = convert_price_to_number(listings)
     listings = transform_price(listings)
+
+    listings = encode_amenities_one_hot(listings)
 
     return listings
