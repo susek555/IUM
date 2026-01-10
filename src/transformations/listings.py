@@ -8,8 +8,6 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from textblob import TextBlob
 
-from src.features import AMENITIES, INITIAL_FEATURES, TARGET
-
 
 def _nomralize_text(text: str) -> str:
     text = text.lower()
@@ -158,35 +156,3 @@ def convert_price_to_number(df: pd.DataFrame) -> pd.DataFrame:
 def transform_price(df: pd.DataFrame) -> pd.DataFrame:
     df["price"] = np.log1p(df["price"])
     return df
-
-
-def transformation_pipeline(listings: pd.DataFrame) -> pd.DataFrame:
-    listings = select_features(listings, INITIAL_FEATURES, TARGET)
-
-    listings = add_is_luxury_attribute(listings)
-    listings = aggregate_property_type(listings)
-
-    listings = fill_bathrooms_values_from_text(listings)
-    listings = add_is_bathroom_shared_attribute(listings)
-
-    listings = encode_amenities_binary(listings, AMENITIES)
-
-    listings = convert_description_to_sentiment(listings)
-    listings = convert_neighborhood_overview_to_setiment(listings)
-
-    listings = convert_percentage_columns(
-        listings, ["host_response_rate", "host_acceptance_rate"]
-    )
-    listings = convert_tf_columns(
-        listings, ["host_is_superhost", "host_identity_verified", "instant_bookable"]
-    )
-
-    listings = drop_processed_columns(
-        listings,
-        ["bathrooms_text", "description", "neighbourhood_overview", "amenities"],
-    )
-
-    listings = convert_price_to_number(listings)
-    listings = transform_price(listings)
-
-    return listings
