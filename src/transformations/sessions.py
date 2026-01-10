@@ -3,19 +3,19 @@ import pandas as pd
 
 
 def drop_browse_listings(df: pd.DataFrame) -> pd.DataFrame:
-    return df[df["action"] != "browse_listings"]
+    df[df["action"] != "browse_listings"]
+
 
 def convert_timestamps_to_dates(df: pd.DataFrame) -> pd.DataFrame:
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df["booking_date"] = pd.to_datetime(df["booking_date"], errors="coerce")
-    return df
 
 
 def drop_records_older_than_one_year(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
     threshold = df["timestamp"].max() - pd.Timedelta(days=365)
-    return df[df["timestamp"] >= threshold]
+    df[df["timestamp"] >= threshold]
 
 
 def get_views_last(df: pd.DataFrame) -> pd.DataFrame:
@@ -47,7 +47,6 @@ def get_unique_viewers_last(
     listings_df["unique_viewers_ltm"] = (
         listings_df["listing_id"].map(unique_counts).fillna(0).astype(int)
     )
-    return listings_df
 
 
 def get_conversion_rate(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.DataFrame:
@@ -58,8 +57,6 @@ def get_conversion_rate(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.DataF
     listings_df["conversion_rate_ltm"] = np.where(
         views > 0, num_bookings / views, np.nan
     )
-
-    return listings_df
 
 
 def get_average_lead_time(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.DataFrame:
@@ -78,8 +75,6 @@ def get_average_lead_time(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.Dat
         avg_lead_time, na_action="ignore"
     )
 
-    return listings_df
-
 
 def get_average_booking_duration(
     df: pd.DataFrame, listings_df: pd.DataFrame
@@ -95,16 +90,16 @@ def get_average_booking_duration(
         avg_duration, na_action="ignore"
     )
 
-    return listings_df
-
 
 def transform_pipeline(sdf: pd.DataFrame) -> pd.DataFrame:
-    sdf = drop_browse_listings(sdf)
-    sdf = convert_timestamps_to_dates(sdf)
-    sdf = drop_records_older_than_one_year(sdf)
+    sdf.copy()
+    drop_browse_listings(sdf)
+    convert_timestamps_to_dates(sdf)
+    drop_records_older_than_one_year(sdf)
+
     ldf = get_views_last(sdf)
-    ldf = get_unique_viewers_last(sdf, ldf)
-    ldf = get_conversion_rate(sdf, ldf)
-    ldf = get_average_lead_time(sdf, ldf)
-    ldf = get_average_booking_duration(sdf, ldf)
+    get_unique_viewers_last(sdf, ldf)
+    get_conversion_rate(sdf, ldf)
+    get_average_lead_time(sdf, ldf)
+    get_average_booking_duration(sdf, ldf)
     return ldf

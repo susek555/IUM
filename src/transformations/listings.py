@@ -6,7 +6,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from textblob import TextBlob
 
-from src.features import AMENITIES, INITIAL_FEATURES
+from src.transformations.features import AMENITIES, INITIAL_FEATURES
 
 
 def _normalize_text(text: str) -> str:
@@ -16,7 +16,7 @@ def _normalize_text(text: str) -> str:
     return text
 
 
-def add_is_luxury_attribute(df: pd.DataFrame) -> pd.DataFrame:
+def add_is_luxury_attribute(df: pd.DataFrame):
     def is_luxury(pt: str) -> int:
         pt = _normalize_text(pt)
         if "loft" in pt or "villa" in pt or "boutique hotel" in pt:
@@ -25,37 +25,34 @@ def add_is_luxury_attribute(df: pd.DataFrame) -> pd.DataFrame:
 
     new_columns = df["property_type"].map(is_luxury, na_action="ignore").astype("Int64")
     df["is_luxury"] = new_columns
-    return df
 
 
-def aggregate_property_type(df: pd.DataFrame) -> pd.DataFrame:
+def aggregate_property_type(df: pd.DataFrame):
     def map_proprerty_type(pt: str) -> str:
         pt = _normalize_text(pt)
         if "rental unit" in pt:
-            return "Rental unit"
+            return "rental_unit"
         if "condo" in pt:
-            return "Condo"
+            return "condo"
         if "home" in pt or "house" in pt:
-            return "Home"
+            return "home"
         if "hotel" in pt or "hostel" in pt:
-            return "Hotel"
-        return "Other"
+            return "hotel"
+        return "other"
 
     df["property_type"] = df["property_type"].map(
         map_proprerty_type, na_action="ignore"
     )
-    return df
 
 
-def fill_bathrooms_values_from_text(df: pd.DataFrame) -> pd.DataFrame:
+def fill_bathrooms_values_from_text(df: pd.DataFrame):
     bathrooms_from_text = pd.to_numeric(
         df["bathrooms_text"].str.extract(r"(\d+\.?\d*)")[0], errors="coerce"
     )
     df["bathrooms"] = df["bathrooms"].combine_first(bathrooms_from_text)
-    return df
 
 
-def add_is_bathroom_shared_attribute(df: pd.DataFrame) -> pd.DataFrame:
+def add_is_bathroom_shared_attribute(df: pd.DataFrame):
     def is_shared(pt: str) -> int:
         pt = pt.lower()
         if "shared" in pt:
@@ -66,7 +63,6 @@ def add_is_bathroom_shared_attribute(df: pd.DataFrame) -> pd.DataFrame:
         df["bathrooms_text"].map(is_shared, na_action="ignore").astype("Int64")
     )
     df["is_bathroom_shared"] = new_columns
-    return df
 
 
 def convert_text_to_sentiment(text: str) -> float:
@@ -82,30 +78,27 @@ def convert_text_to_sentiment(text: str) -> float:
     return float(blob.sentiment.polarity)  # pyright: ignore
 
 
-def convert_description_to_sentiment(df: pd.DataFrame) -> pd.DataFrame:
+def convert_description_to_sentiment(df: pd.DataFrame):
     sentiment = df["description"].map(convert_text_to_sentiment, na_action="ignore")
     df["description_sentiment"] = sentiment
-    return df
 
 
-def convert_neighborhood_overview_to_sentiment(df: pd.DataFrame) -> pd.DataFrame:
+def convert_neighborhood_overview_to_sentiment(df: pd.DataFrame):
     sentiment = df["neighborhood_overview"].map(
         convert_text_to_sentiment, na_action="ignore"
     )
     df["neighborhood_overview_sentiment"] = sentiment
-    return df
 
 
-def add_amenity_count_attribute(df: pd.DataFrame) -> pd.DataFrame:
+def add_amenity_count_attribute(df: pd.DataFrame):
     df["amenity_count"] = df["amenities"].apply(
         lambda x: len([a.strip().lower() for a in ast.literal_eval(x)])
         if pd.notna(x) and x.startswith("[")
         else []
     )
-    return df
 
 
-def encode_amenities_binary(df: pd.DataFrame, amenities: list[str]) -> pd.DataFrame:
+def encode_amenities_binary(df: pd.DataFrame, amenities: list[str]):
     temp_amenities = df["amenities"].apply(
         lambda x: set(_normalize_text(a) for a in ast.literal_eval(x))
         if pd.notna(x) and isinstance(x, str) and x.startswith("[")
@@ -126,22 +119,18 @@ def encode_amenities_binary(df: pd.DataFrame, amenities: list[str]) -> pd.DataFr
     new_df = pd.DataFrame(new_columns_data, index=df.index)
     df = pd.concat([df, new_df], axis=1)
 
-    return df
 
-
-def convert_percentage_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+def convert_percentage_columns(df: pd.DataFrame, columns: list[str]):
     for col in columns:
         df[col] = df[col].str.strip("%").astype(float) / 100.0
-    return df
 
 
-def convert_tf_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+def convert_tf_columns(df: pd.DataFrame, columns: list[str]):
     def map_tf(val: str) -> int:
         return 1 if val == "t" else 0
 
     for col in columns:
         df[col] = df[col].map(map_tf, na_action="ignore").astype("Int64")
-    return df
 
 
 def transform_pipeline(df: pd.DataFrame) -> pd.DataFrame:
@@ -149,18 +138,17 @@ def transform_pipeline(df: pd.DataFrame) -> pd.DataFrame:
     tf_attributes = ["host_is_superhost", "host_identity_verified", "instant_bookable"]
     drop = ["bathrooms_text", "description", "neighborhood_overview", "amenities"]
 
-    df = df[INITIAL_FEATURES]
-    df = add_is_luxury_attribute(df)
-    df = aggregate_property_type(df)
-    df = fill_bathrooms_values_from_text(df)
-    df = add_is_bathroom_shared_attribute(df)
-    df = add_amenity_count_attribute(df)
-    df = encode_amenities_binary(df, AMENITIES)
-    df = convert_description_to_sentiment(df)
-    df = convert_neighborhood_overview_to_sentiment(df)
-    df = convert_percentage_columns(df, percentage_attributes)
-    df = convert_tf_columns(df, tf_attributes)
-
+    df = df.loc[:, INITIAL_FEATURES].copy()
+    add_is_luxury_attribute(df)
+    aggregate_property_type(df)
+    fill_bathrooms_values_from_text(df)
+    add_is_bathroom_shared_attribute(df)
+    add_amenity_count_attribute(df)
+    encode_amenities_binary(df, AMENITIES)
+    convert_description_to_sentiment(df)
+    convert_neighborhood_overview_to_sentiment(df)
+    convert_percentage_columns(df, percentage_attributes)
+    convert_tf_columns(df, tf_attributes)
     df.drop(columns=drop, inplace=True)
 
     return df

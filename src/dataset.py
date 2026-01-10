@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 
 import src.transformations.listings as listings_transforms
@@ -5,9 +7,11 @@ import src.transformations.sessions as sessions_transforms
 import src.transformations.target as target_transforms
 
 
-def transformation_pipeline(
-    listings: pd.DataFrame, sessions: pd.DataFrame, target: pd.Series
-) -> pd.DataFrame:
+def main() -> None:
+    listings = pd.read_csv("./data/raw/listings.csv")
+    sessions = pd.read_csv("./data/raw/sessions.csv")
+    target = listings["price"]
+
     listings_features = listings_transforms.transform_pipeline(listings)
     sessions_features = sessions_transforms.transform_pipeline(sessions)
     transformed_target = target_transforms.transform_pipeline(target)
@@ -18,5 +22,10 @@ def transformation_pipeline(
     features.drop(columns=["listing_id", "id"], inplace=True)
 
     dataset = features.assign(price=transformed_target.values)
+    save_dir = Path("./data/processed")
+    save_dir.mkdir(parents=True, exist_ok=True)
+    dataset.to_csv(save_dir / "dataset.csv", index=False)
 
-    return dataset
+
+if __name__ == "__main__":
+    main()
