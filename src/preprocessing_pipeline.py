@@ -4,7 +4,9 @@ import src.transformations.sessions as sessions_transforms
 from src.features import TARGET, INITIAL_FEATURES, AMENITIES
 
 
-def transformation_pipeline(listings: pd.DataFrame, sessions: pd.DataFrame) -> pd.DataFrame:
+def transformation_pipeline(
+    listings: pd.DataFrame, sessions: pd.DataFrame
+) -> pd.DataFrame:
     # LISTINGS TRANSFORMATIONS
     listings = listings_transforms.select_features(listings, INITIAL_FEATURES, TARGET)
 
@@ -37,14 +39,29 @@ def transformation_pipeline(listings: pd.DataFrame, sessions: pd.DataFrame) -> p
     # SESSIONS TRANSFORMATIONS
     sessions = sessions_transforms.drop_browse_listings(sessions)
     sessions, newest_timestamp = sessions_transforms.get_newest_timestamp(sessions)
-    sessions = sessions_transforms.drop_records_older_than_one_year(sessions, newest_timestamp)
+    sessions = sessions_transforms.drop_records_older_than_one_year(
+        sessions, newest_timestamp
+    )
 
     listings_sessions = sessions_transforms.get_views_last(sessions)
-    listings_sessions = sessions_transforms.get_unique_viewers_last(sessions, listings_sessions)
-    listings_sessions = sessions_transforms.get_conversion_rate(sessions, listings_sessions)
-    listings_sessions = sessions_transforms.get_average_lead_time(sessions, listings_sessions)
-    listings_sessions = sessions_transforms.get_average_booking_duration(sessions, listings_sessions)
+    listings_sessions = sessions_transforms.get_unique_viewers_last(
+        sessions, listings_sessions
+    )
+    listings_sessions = sessions_transforms.get_conversion_rate(
+        sessions, listings_sessions
+    )
+    listings_sessions = sessions_transforms.get_average_lead_time(
+        sessions, listings_sessions
+    )
+    listings_sessions = sessions_transforms.get_average_booking_duration(
+        sessions, listings_sessions
+    )
 
-    # TODO merge listings with listings_sessions on listing_id
+    # MERGE LISTINGS WITH SESSIONS STATS
+    listings = listings.merge(
+        listings_sessions, left_on="id", right_on="listing_id", how="left"
+    )
+    listings.drop(columns=["listing_id"], inplace=True)
+    listings.drop(columns=["id"], inplace=True)
 
     return listings

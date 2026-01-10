@@ -1,4 +1,4 @@
-_accomodation_features = [
+_accommodation_features = [
     "property_type",
     "room_type",
     "accommodates",
@@ -35,12 +35,17 @@ _availability_features = [
     "instant_bookable",
 ]
 
+_temporary_features = [
+    "id",
+]
+
 INITIAL_FEATURES = (
-    _accomodation_features
+    _accommodation_features
     + _text_features
     + _location_features
     + _host_trust_features
     + _availability_features
+    + _temporary_features
 )
 
 AMENITIES = [
