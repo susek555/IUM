@@ -83,10 +83,4 @@ def preprocess() -> pd.DataFrame:
     )
 
     dataset = features_df.assign(price=dataset["price"].values)
-    save_dir = Path("./data/processed")
-    save_dir.mkdir(parents=True, exist_ok=True)
-    dataset.to_csv(save_dir / "dataset.csv", index=False)
-
-
-if __name__ == "__main__":
-    preprocess()
+    return dataset
