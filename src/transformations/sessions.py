@@ -66,7 +66,7 @@ def get_average_lead_time(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.Dat
     ].copy()
 
     bookings["lead_time_days"] = (
-        bookings["booking_date"] - bookings["timestamp"].dt.normalize()  # pyright: ignore
+        bookings["booking_date"] - bookings["timestamp"].dt.normalize()
     ).dt.days
 
     avg_lead_time = bookings.groupby("listing_id")["lead_time_days"].mean()

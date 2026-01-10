@@ -69,13 +69,13 @@ def convert_text_to_sentiment(text: str) -> float:
     soup = BeautifulSoup(text, "html.parser")
     text = soup.get_text()
 
-    text = contractions.fix(text)  # pyright: ignore
+    text = contractions.fix(text)
 
     text = re.sub(r"[^\w\s!?-]", "", text)
     text = text.lower()
 
     blob = TextBlob(text)
-    return float(blob.sentiment.polarity)  # pyright: ignore
+    return float(blob.sentiment.polarity)
 
 
 def convert_description_to_sentiment(df: pd.DataFrame):
