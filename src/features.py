@@ -61,4 +61,4 @@ AMENITIES = [
     "Pack \u2019n play/Travel crib",
 ]
 
-TARGET = ["price"]
+TARGET = "price"

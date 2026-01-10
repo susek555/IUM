@@ -23,11 +23,9 @@ def get_amenities_counter(df: pd.DataFrame) -> CounterType[str]:
     return Counter(all_amenities)
 
 
-def calc_amenities_correlation(df: pd.DataFrame, min_freq: int = 10) -> pd.Series:
-    df["price"] = (
-        df["price"].astype(str).str.replace(r"[$,]", "", regex=True).astype(float)
-    )
-
+def calc_amenities_correlation(
+    df: pd.DataFrame, price: pd.Series, min_freq: int = 10
+) -> pd.Series:
     amenities_list = _extract_amenities_list(df)
 
     mlb = MultiLabelBinarizer(sparse_output=True)
@@ -41,18 +39,14 @@ def calc_amenities_correlation(df: pd.DataFrame, min_freq: int = 10) -> pd.Serie
     valid_cols = counts[counts >= min_freq].index
     amenities_df = amenities_df[valid_cols]
 
-    correlation = amenities_df.sparse.to_dense().corrwith(
-        df["price"], method="spearman"
-    )
+    correlation = amenities_df.sparse.to_dense().corrwith(price, method="pearson")
 
     return correlation.sort_values(ascending=False)
 
 
-def calc_amenities_mutual_info(df: pd.DataFrame, min_freq: int = 50) -> pd.DataFrame:
-    df["price"] = (
-        df["price"].astype(str).str.replace(r"[$,]", "", regex=True).astype(float)
-    )
-
+def calc_amenities_mutual_info(
+    df: pd.DataFrame, price: pd.Series, min_freq: int = 50
+) -> pd.DataFrame:
     amenities_list = _extract_amenities_list(df)
 
     mlb = MultiLabelBinarizer(sparse_output=True)
@@ -64,14 +58,15 @@ def calc_amenities_mutual_info(df: pd.DataFrame, min_freq: int = 50) -> pd.DataF
     counts = amenities_df.sum()
     valid_cols = counts[counts >= min_freq].index
     X = amenities_df[valid_cols]
-    y = df["price"]
 
-    mi_scores = mutual_info_regression(X, y, discrete_features=True, random_state=42)
+    mi_scores = mutual_info_regression(
+        X, price, discrete_features=True, random_state=42
+    )
 
     results = []
     for idx, col in enumerate(X.columns):
         has_amenity = X[col] == 1
-        mean_diff = y[has_amenity].mean() - y[~has_amenity].mean()
+        mean_diff = price[has_amenity].mean() - price[~has_amenity].mean()
 
         results.append(
             {
@@ -87,21 +82,3 @@ def calc_amenities_mutual_info(df: pd.DataFrame, min_freq: int = 50) -> pd.DataF
         .sort_values(by="mutual_info", ascending=False)
         .set_index("amenity")
     )
-
-
-if __name__ == "__main__":
-    listings = pd.read_csv("./data/raw/listings.csv")
-    corr = calc_amenities_correlation(listings, min_freq=50)
-
-    print("Top 10 udogodnień podbijających cenę:")
-    print(corr.head(10))
-
-    print("\nTop 10 udogodnień w tanich ofertach:")
-    print(corr.tail(10))
-
-    print(f"Średnia wartość korelacji: {corr.mean():.4f}")
-
-    mi_df = calc_amenities_mutual_info(listings, min_freq=50)
-
-    print("Top 10 najważniejszych udogodnień (wg Mutual Information):")
-    print(mi_df.head(10))

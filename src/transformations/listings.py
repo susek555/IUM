@@ -1,31 +1,24 @@
 import ast
 import re
-from unicodedata import normalize
 
 import contractions
-import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
 from textblob import TextBlob
 
+from src.features import AMENITIES, INITIAL_FEATURES
 
-def _nomralize_text(text: str) -> str:
+
+def _normalize_text(text: str) -> str:
     text = text.lower()
-    out_text = normalize("NFKD", text)
-    return out_text
-
-
-def select_features(
-    df: pd.DataFrame,
-    select_features: list[str],
-    target: list[str],
-) -> pd.DataFrame:
-    return df[select_features + target]
+    text = re.sub(r"[^\w\s]", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 
 def add_is_luxury_attribute(df: pd.DataFrame) -> pd.DataFrame:
     def is_luxury(pt: str) -> int:
-        pt = _nomralize_text(pt)
+        pt = _normalize_text(pt)
         if "loft" in pt or "villa" in pt or "boutique hotel" in pt:
             return 1
         return 0
@@ -37,7 +30,7 @@ def add_is_luxury_attribute(df: pd.DataFrame) -> pd.DataFrame:
 
 def aggregate_property_type(df: pd.DataFrame) -> pd.DataFrame:
     def map_proprerty_type(pt: str) -> str:
-        pt = _nomralize_text(pt)
+        pt = _normalize_text(pt)
         if "rental unit" in pt:
             return "Rental unit"
         if "condo" in pt:
@@ -77,13 +70,13 @@ def add_is_bathroom_shared_attribute(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _convert_text_to_sentiment(text: str) -> float:
+def convert_text_to_sentiment(text: str) -> float:
     soup = BeautifulSoup(text, "html.parser")
     text = soup.get_text()
 
     text = contractions.fix(text)  # pyright: ignore
 
-    text = re.sub(r"[^\w\s!?]", "", text)
+    text = re.sub(r"[^\w\s!?-]", "", text)
     text = text.lower()
 
     blob = TextBlob(text)
@@ -91,22 +84,26 @@ def _convert_text_to_sentiment(text: str) -> float:
 
 
 def convert_description_to_sentiment(df: pd.DataFrame) -> pd.DataFrame:
-    sentiment = df["description"].map(_convert_text_to_sentiment, na_action="ignore")
+    sentiment = df["description"].map(convert_text_to_sentiment, na_action="ignore")
     df["description_sentiment"] = sentiment
     return df
 
 
-def convert_neighborhood_overview_to_setiment(df: pd.DataFrame) -> pd.DataFrame:
+def convert_neighborhood_overview_to_sentiment(df: pd.DataFrame) -> pd.DataFrame:
     sentiment = df["neighborhood_overview"].map(
-        _convert_text_to_sentiment, na_action="ignore"
+        convert_text_to_sentiment, na_action="ignore"
     )
     df["neighborhood_overview_sentiment"] = sentiment
     return df
 
 
+def add_amenity_count_attribute(df: pd.DataFrame) -> pd.DataFrame:
+    pass
+
+
 def encode_amenities_binary(df: pd.DataFrame, amenities: list[str]) -> pd.DataFrame:
     temp_amenities = df["amenities"].apply(
-        lambda x: set(_nomralize_text(a) for a in ast.literal_eval(x))
+        lambda x: set(_normalize_text(a) for a in ast.literal_eval(x))
         if pd.notna(x) and isinstance(x, str) and x.startswith("[")
         else set()
     )
@@ -114,7 +111,7 @@ def encode_amenities_binary(df: pd.DataFrame, amenities: list[str]) -> pd.DataFr
     new_columns_data = {}
 
     for amenity in amenities:
-        search_key = _nomralize_text(amenity)
+        search_key = _normalize_text(amenity)
         clean_col_name = (
             f"amenity_{search_key.strip().replace(' ', '_').replace('/', '_').lower()}"
         )
@@ -143,16 +140,23 @@ def convert_tf_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     return df
 
 
-def drop_processed_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
-    df = df.drop(columns=columns)
-    return df
+def transform_pipeline(df: pd.DataFrame) -> pd.DataFrame:
+    percentage_attributes = ["host_response_rate", "host_acceptance_rate"]
+    tf_attributes = ["host_is_superhost", "host_identity_verified", "instant_bookable"]
+    drop = ["bathrooms_text", "description", "neighborhood_overview", "amenities"]
 
+    df = df[INITIAL_FEATURES]
+    df = add_is_luxury_attribute(df)
+    df = aggregate_property_type(df)
+    df = fill_bathrooms_values_from_text(df)
+    df = add_is_bathroom_shared_attribute(df)
+    df = add_amenity_count_attribute(df)
+    df = encode_amenities_binary(df, AMENITIES)
+    df = convert_description_to_sentiment(df)
+    df = convert_neighborhood_overview_to_sentiment(df)
+    df = convert_percentage_columns(df, percentage_attributes)
+    df = convert_tf_columns(df, tf_attributes)
 
-def convert_price_to_number(df: pd.DataFrame) -> pd.DataFrame:
-    df["price"] = df["price"].str.replace("$", "").str.replace(",", "").astype(float)
-    return df
+    df.drop(columns=drop, inplace=True)
 
-
-def transform_price(df: pd.DataFrame) -> pd.DataFrame:
-    df["price"] = np.log1p(df["price"])
     return df
