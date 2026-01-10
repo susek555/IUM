@@ -49,10 +49,9 @@ def aggregate_property_type(df: pd.DataFrame) -> pd.DataFrame:
 
 def fill_bathrooms_values_from_text(df: pd.DataFrame) -> pd.DataFrame:
     bathrooms_from_text = pd.to_numeric(
-        df["bathrooms_text"].str.extract(r"(\d+\.?\d*)")[0],
-        errors="coerce",
+        df["bathrooms_text"].str.extract(r"(\d+\.?\d*)")[0], errors="coerce"
     )
-    df["bathrooms"] = df["bathrooms"].fillna(bathrooms_from_text)
+    df["bathrooms"] = df["bathrooms"].combine_first(bathrooms_from_text)
     return df
 
 
@@ -98,7 +97,12 @@ def convert_neighborhood_overview_to_sentiment(df: pd.DataFrame) -> pd.DataFrame
 
 
 def add_amenity_count_attribute(df: pd.DataFrame) -> pd.DataFrame:
-    pass
+    df["amenity_count"] = df["amenities"].apply(
+        lambda x: len([a.strip().lower() for a in ast.literal_eval(x)])
+        if pd.notna(x) and x.startswith("[")
+        else []
+    )
+    return df
 
 
 def encode_amenities_binary(df: pd.DataFrame, amenities: list[str]) -> pd.DataFrame:
