@@ -7,6 +7,8 @@ from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
 def preprocess() -> pd.DataFrame:
     dataset = pd.read_csv("./data/processed/dataset.csv")
+    if "Unnamed: 0" in dataset.columns:
+        dataset = dataset.drop(columns=["Unnamed: 0"])
     features = dataset.drop(columns=["price"])
     binary_cols = [
         col
@@ -17,7 +19,7 @@ def preprocess() -> pd.DataFrame:
 
     fill_with_zero_columns = ["average_lead_time", "average_booking_duration"]
 
-    cluster_column = ["cluster_id"] 
+    cluster_column = ["cluster_id"]
 
     num_columns = (
         features.select_dtypes(include=["number"])

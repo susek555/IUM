@@ -37,6 +37,7 @@ _availability_features = [
 
 _temporary_features = [
     "id",
+    "host_since",
 ]
 
 INITIAL_FEATURES = (
