@@ -15,8 +15,7 @@ def drop_records_older_than_one_year(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
     threshold = df["timestamp"].max() - pd.Timedelta(days=365)
-    df[df["timestamp"] >= threshold]
-
+    df.drop(df[df["timestamp"] < threshold].index, inplace=True)
 
 def get_views_last(df: pd.DataFrame) -> pd.DataFrame:
     views_series = df.loc[
