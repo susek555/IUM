@@ -5,7 +5,6 @@ import pandas as pd
 import src.transformations.listings as listings_transforms
 import src.transformations.sessions as sessions_transforms
 import src.transformations.target as target_transforms
-import src.transformations.mark_noise as mark_noise
 
 
 def main() -> None:
@@ -20,7 +19,6 @@ def main() -> None:
     features = listings_features.merge(
         sessions_features, left_on="id", right_on="listing_id", how="left"
     )
-    mark_noise.mark_noise_listings(sessions, listings_features, features)
     features.drop(columns=["listing_id", "id"], inplace=True)
 
     dataset = features.assign(price=transformed_target.values)

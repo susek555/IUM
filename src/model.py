@@ -16,13 +16,14 @@ class Model:
             data = data.drop(columns=["Unnamed: 0"])
         return data
 
-    def fit(self, n_estimators: int = 100, cv: int = 5) -> None:
-        if self.data is None:
-            self.data = self.read_data_from_file()
+    def fit(self, data: pd.DataFrame = None, n_estimators: int = 100, cv: int = 5) -> None:
+        if data is None:
+            data = self.read_data_from_file()
+        self.data = data
 
-        train_data = self.data[self.data["bin__is_training_sample"] == 1].copy()  # Maybe remove later
+        train_data = data.copy()
 
-        X = train_data.drop(columns=["price", "bin__is_training_sample"])
+        X = train_data.drop(columns=["price"])
         y = train_data["price"]
 
         self.model = RandomForestRegressor(
@@ -48,7 +49,7 @@ class Model:
         if self.model is None:
             raise ValueError("Model is not trained. Call fit() before predict_all().")
 
-        X_full = self.data.drop(columns=["price", "bin__is_training_sample"])
+        X_full = self.data.drop(columns=["price"])
 
         full_results = self.data.copy()
         full_results['predicted_price'] = self.model.predict(X_full)
