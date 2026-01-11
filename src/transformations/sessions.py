@@ -97,7 +97,6 @@ def transform_pipeline(sdf: pd.DataFrame) -> pd.DataFrame:
     drop_records_older_than_one_year(sdf)
 
     ldf = get_views_last(sdf)
-    get_unique_viewers_last(sdf, ldf)
     get_conversion_rate(sdf, ldf)
     get_average_lead_time(sdf, ldf)
     get_average_booking_duration(sdf, ldf)
