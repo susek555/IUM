@@ -2,8 +2,10 @@ import ast
 import re
 
 import contractions
+import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
+from sklearn.cluster import HDBSCAN
 from textblob import TextBlob
 
 from src.transformations.features import AMENITIES, INITIAL_FEATURES
@@ -14,6 +16,19 @@ def _normalize_text(text: str) -> str:
     text = re.sub(r"[^\w\s]", "", text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
+
+
+def add_cluster_id_attribute(df: pd.DataFrame):
+    # best parameters are taken from analysis
+    coords_rad = np.radians(df[["latitude", "longitude"]].to_numpy())
+    clusterer = HDBSCAN(
+        min_cluster_size=15,
+        min_samples=3,
+        metric="haversine",
+        cluster_selection_method="eom",
+        copy=False,
+    )
+    df["cluster_id"] = clusterer.fit_predict(coords_rad)
 
 
 def add_is_luxury_attribute(df: pd.DataFrame):
@@ -139,6 +154,7 @@ def transform_pipeline(df: pd.DataFrame) -> pd.DataFrame:
     drop = ["bathrooms_text", "description", "neighborhood_overview", "amenities"]
 
     df = df.loc[:, INITIAL_FEATURES].copy()
+    add_cluster_id_attribute(df)
     add_is_luxury_attribute(df)
     aggregate_property_type(df)
     fill_bathrooms_values_from_text(df)

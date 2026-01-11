@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -19,16 +17,17 @@ def preprocess() -> pd.DataFrame:
 
     fill_with_zero_columns = ["average_lead_time", "average_booking_duration"]
 
+    cluster_column = ["cluster_id"] 
+
     num_columns = (
         features.select_dtypes(include=["number"])
-        .columns.difference(binary_cols + fill_with_zero_columns)
+        .columns.difference(binary_cols + fill_with_zero_columns + cluster_column)
         .tolist()
     )
 
-    ohe_columns = ["property_type", "room_type"]
+    ohe_columns = ["property_type", "room_type"] + cluster_column
 
     ord_columns = ["host_response_time"]
-
 
     transformer = ColumnTransformer(
         transformers=[
@@ -39,7 +38,9 @@ def preprocess() -> pd.DataFrame:
             ),
             (
                 "zero",
-                Pipeline([("imputer"), SimpleImputer(strategy="constant", fill_value=0.0)]),
+                Pipeline(
+                    [("imputer", SimpleImputer(strategy="constant", fill_value=0.0))]
+                ),
                 fill_with_zero_columns,
             ),
             (
@@ -92,3 +93,7 @@ def preprocess() -> pd.DataFrame:
 
     dataset = features_df.assign(price=dataset["price"].values)
     return dataset
+
+if __name__ == "__main__":
+    dataset = preprocess()
+    dataset.to_csv("./data/processed/preprocessed.csv")

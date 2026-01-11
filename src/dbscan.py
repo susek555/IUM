@@ -13,7 +13,7 @@ def load_data(filepath: str) -> pd.DataFrame:
 
 def group_listings_by_region(
     df: pd.DataFrame, min_cluster_size: int = 15, min_samples=3
-) -> tuple[pd.DataFrame, float]:
+) -> pd.DataFrame:
     coords_rad = np.radians(df[["latitude", "longitude"]].to_numpy())
 
     clusterer = HDBSCAN(
@@ -33,12 +33,15 @@ def group_listings_by_region(
 
 
 def aggregate_results(
-    df: pd.DataFrame,
-    min_cluster_sizes: list[int],
-    min_samples = 3
+    df: pd.DataFrame, min_cluster_sizes: list[int], min_samples=3
 ) -> list[tuple[int, pd.DataFrame]]:
     return [
-        (i, group_listings_by_region(df.copy(), min_cluster_size=i, min_samples=min_samples))
+        (
+            i,
+            group_listings_by_region(
+                df.copy(), min_cluster_size=i, min_samples=min_samples
+            ),
+        )
         for i in min_cluster_sizes
     ]
 
