@@ -2,13 +2,15 @@ import ast
 import re
 
 import contractions
-import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
-from sklearn.cluster import HDBSCAN
+from haversine import haversine
 from textblob import TextBlob
 
 from src.transformations.features import AMENITIES, INITIAL_FEATURES
+
+CENTRE_LAT = 37.9755
+CENTRE_LON = 23.7349
 
 
 def _normalize_text(text: str) -> str:
@@ -18,17 +20,13 @@ def _normalize_text(text: str) -> str:
     return text
 
 
-def add_cluster_id_attribute(df: pd.DataFrame):
-    # best parameters are taken from analysis
-    coords_rad = np.radians(df[["latitude", "longitude"]].to_numpy())
-    clusterer = HDBSCAN(
-        min_cluster_size=15,
-        min_samples=3,
-        metric="haversine",
-        cluster_selection_method="eom",
-        copy=False,
-    )
-    df["cluster_id"] = clusterer.fit_predict(coords_rad)
+def add_distance_to_centre_attribute(df: pd.DataFrame):
+    def _compute_distance(row):
+        lat = row.get("latitude")
+        lon = row.get("longitude")
+        return haversine((float(lat), float(lon)), (CENTRE_LAT, CENTRE_LON))
+
+    df["distance_to_centre"] = df.apply(_compute_distance, axis=1)
 
 
 def add_is_luxury_attribute(df: pd.DataFrame):
@@ -151,10 +149,10 @@ def convert_tf_columns(df: pd.DataFrame, columns: list[str]):
 def transform_pipeline(df: pd.DataFrame) -> pd.DataFrame:
     percentage_attributes = ["host_response_rate", "host_acceptance_rate"]
     tf_attributes = ["host_is_superhost", "host_identity_verified", "instant_bookable"]
-    drop = ["bathrooms_text", "description", "neighborhood_overview", "amenities"]
+    drop = ["longitude", "latitude", "bathrooms_text", "description", "neighborhood_overview", "amenities"]
 
     df = df.loc[:, INITIAL_FEATURES].copy()
-    add_cluster_id_attribute(df)
+    add_distance_to_centre_attribute(df)
     add_is_luxury_attribute(df)
     aggregate_property_type(df)
     fill_bathrooms_values_from_text(df)
