@@ -17,9 +17,11 @@ def preprocess() -> pd.DataFrame:
         and set(features[col].dropna().unique()).issubset({0, 1})
     ]
 
+    fill_with_zero_columns = ["average_lead_time", "average_booking_duration"]
+
     num_columns = (
         features.select_dtypes(include=["number"])
-        .columns.difference(binary_cols)
+        .columns.difference(binary_cols + fill_with_zero_columns)
         .tolist()
     )
 
@@ -27,12 +29,18 @@ def preprocess() -> pd.DataFrame:
 
     ord_columns = ["host_response_time"]
 
+
     transformer = ColumnTransformer(
         transformers=[
             (
                 "bin",
                 Pipeline([("imputer", SimpleImputer(strategy="most_frequent"))]),
                 binary_cols,
+            ),
+            (
+                "zero",
+                Pipeline([("imputer"), SimpleImputer(strategy="constant", fill_value=0.0)]),
+                fill_with_zero_columns,
             ),
             (
                 "num",
