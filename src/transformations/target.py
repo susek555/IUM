@@ -10,5 +10,5 @@ def logarithmize_price(s: pd.Series) -> pd.Series:
 
 def transform_pipeline(s: pd.Series) -> pd.Series:
     s = convert_price_to_number(s)
-    s = logarithmize_price(s)
+    # s = logarithmize_price(s)
     return s

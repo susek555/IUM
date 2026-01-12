@@ -3,7 +3,10 @@ import matplotlib.pyplot as plt
 
 def visualize_feature_importance_tables(pipe):
     importances = pipe.named_steps['regressor'].feature_importances_
-    feature_names = pipe.named_steps['preprocessor'].transformer.get_feature_names_out()
+    if 'selector' in pipe.named_steps:
+        feature_names = pipe.named_steps['selector'].selected_features
+    else:
+        feature_names = pipe.named_steps['preprocessor'].transformer.get_feature_names_out()
 
     df = pd.DataFrame({
         'feature': feature_names,
@@ -43,7 +46,10 @@ def visualize_feature_importance_tables(pipe):
 
 def plot_importance_distribution(pipe):
     importances = pipe.named_steps['regressor'].feature_importances_
-    feature_names = pipe.named_steps['preprocessor'].transformer.get_feature_names_out()
+    if 'selector' in pipe.named_steps:
+        feature_names = pipe.named_steps['selector'].selected_features
+    else:
+        feature_names = pipe.named_steps['preprocessor'].transformer.get_feature_names_out()
 
     df = pd.DataFrame({'feature': feature_names, 'importance': importances})
     df = df.sort_values('importance', ascending=False).reset_index(drop=True)
@@ -61,7 +67,7 @@ def plot_importance_distribution(pipe):
 
     plt.title("Attribute importance distribution", fontsize=14, pad=15)
     plt.xlabel("Attributes ranking (from most important)", fontsize=12)
-    plt.ylabel("Imp[ortance (log scale)", fontsize=12)
+    plt.ylabel("Importance (log scale)", fontsize=12)
     plt.grid(True, which="both", ls="-", alpha=0.2)
     plt.legend()
 
