@@ -36,7 +36,6 @@ def visualize_feature_importance_tables(pipe):
             cellLoc='left'
         )
 
-        # Stylizacja tabeli
         table.auto_set_font_size(False)
         table.set_fontsize(10)
         table.scale(1, 2)
@@ -46,10 +45,7 @@ def visualize_feature_importance_tables(pipe):
 
 def plot_importance_distribution(pipe):
     importances = pipe.named_steps['regressor'].feature_importances_
-    if 'selector' in pipe.named_steps:
-        feature_names = pipe.named_steps['selector'].selected_features
-    else:
-        feature_names = pipe.named_steps['preprocessor'].transformer.get_feature_names_out()
+    feature_names = pipe.named_steps['preprocessor'].transformer.get_feature_names_out()
 
     df = pd.DataFrame({'feature': feature_names, 'importance': importances})
     df = df.sort_values('importance', ascending=False).reset_index(drop=True)
@@ -60,10 +56,15 @@ def plot_importance_distribution(pipe):
 
     plt.yscale('log')
 
-    cutoff = 0.005
-    plt.axhline(y=cutoff, color='red', linestyle='--', alpha=0.6, label=f'Cutoff ({cutoff})')
+    pct = 0.6
+    cutoff_idx = int(len(df) * pct)
+    if cutoff_idx >= len(df):
+        cutoff_idx = len(df) - 1
+    cutoff = float(df.loc[cutoff_idx, 'importance'])
 
-    num_above = len(df[df['importance'] > cutoff])
+    plt.axhline(y=cutoff, color='red', linestyle='--', alpha=0.6, label=f'Cutoff ({pct*100:.0f}%)')
+
+    num_above = int((df['importance'] > cutoff).sum())
 
     plt.title("Attribute importance distribution", fontsize=14, pad=15)
     plt.xlabel("Attributes ranking (from most important)", fontsize=12)
