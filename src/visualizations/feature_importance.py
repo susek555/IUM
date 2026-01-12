@@ -55,17 +55,17 @@ def plot_importance_distribution(pipe):
     plt.yscale('log')
 
     cutoff = 0.005
-    plt.axhline(y=cutoff, color='red', linestyle='--', alpha=0.6, label=f'Próg odcięcia ({cutoff})')
+    plt.axhline(y=cutoff, color='red', linestyle='--', alpha=0.6, label=f'Cutoff ({cutoff})')
 
     num_above = len(df[df['importance'] > cutoff])
 
-    plt.title("Rozkład ważności cech (Skala Logarytmiczna)", fontsize=14, pad=15)
-    plt.xlabel("Ranking atrybutu (od najważniejszego)", fontsize=12)
-    plt.ylabel("Ważność (log scale)", fontsize=12)
+    plt.title("Attribute importance distribution", fontsize=14, pad=15)
+    plt.xlabel("Attributes ranking (from most important)", fontsize=12)
+    plt.ylabel("Imp[ortance (log scale)", fontsize=12)
     plt.grid(True, which="both", ls="-", alpha=0.2)
     plt.legend()
 
-    plt.annotate(f'Cechy istotne: {num_above}',
+    plt.annotate(f'Important features: {num_above}',
                  xy=(num_above, cutoff), xytext=(num_above + 5, cutoff * 5),
                  arrowprops=dict(facecolor='black', shrink=0.05, width=1, headwidth=5))
 
