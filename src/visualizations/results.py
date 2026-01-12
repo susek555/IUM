@@ -7,28 +7,6 @@ from matplotlib.colors import Normalize
 from pathlib import Path
 
 
-def visualize_results(differences: np.ndarray, clusters: np.ndarray) -> None:
-    results = pd.DataFrame({"difference": differences, "cluster_id": clusters})
-
-    plt.figure(figsize=(20, 10))
-
-    results.boxplot(
-        column="difference",
-        by="cluster_id",
-        grid=False,
-        showfliers=False,
-    )
-
-    plt.axhline(0, linestyle="--", linewidth=1)
-    plt.title("Price differences grouped by clusters")
-    plt.suptitle("")
-    plt.xlabel("cluster_id")
-    plt.ylabel("price - predicted_price")
-
-    plt.tight_layout()
-    plt.show()
-
-
 def save_price_spreads(
     differences: np.ndarray, clusters: np.ndarray, listings: pd.DataFrame
 ) -> None:
@@ -43,6 +21,45 @@ def save_price_spreads(
     pd.DataFrame(
         dataset[["latitude", "longitude", "cluster_id", "price_spread"]]
     ).to_csv(save_dir / "price_spreads.csv", index=False)
+
+
+def visualize_results(differences: np.ndarray, clusters: np.ndarray, ax=None, title=None) -> None:
+    results = pd.DataFrame({"difference": differences, "cluster_id": clusters})
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+    results.boxplot(
+        column="difference",
+        by="cluster_id",
+        grid=False,
+        showfliers=False,
+        ax=ax
+    )
+
+    ax.axhline(0, linestyle="--", color="red", linewidth=1, alpha=0.6)
+    ax.set_title(title if title else "Price differences grouped by clusters")
+    ax.set_xlabel("cluster_id")
+    ax.set_ylabel("price - predicted_price")
+
+    if ax.get_figure():
+            ax.get_figure().suptitle("")
+
+def visualize_results_compare(
+    diffs1: np.ndarray,
+    diffs2: np.ndarray,
+    clusters: np.ndarray,
+    label1: str = "Linear", label2: str = "Random Forest"
+) -> None:
+    fig, axes = plt.subplots(1, 2, figsize=(20, 8), sharey=True)
+
+    visualize_results(diffs1, clusters, ax=axes[0], title=label1)
+    visualize_results(diffs2, clusters, ax=axes[1], title=label2)
+
+    plt.tight_layout()
+    plt.show()
+
+
 
 
 def visualize_map(
