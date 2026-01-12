@@ -8,21 +8,18 @@ from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
 class Preprocessor(BaseEstimator, TransformerMixin):
     def __init__(self):
-        self.tranformer = None
+        self.transformer = None
 
     def fit(self, X, y=None):
-        cpy = X.copy()
-        features = cpy.drop(columns=["price"])
-
         binary_cols = [
             col
-            for col in features.columns
-            if features[col].dropna().nunique() <= 2
-            and set(features[col].dropna().unique()).issubset({0, 1})
+            for col in X.columns
+            if X[col].dropna().nunique() <= 2
+            and set(X[col].dropna().unique()).issubset({0, 1})
         ]
         zero_columns = ["average_lead_time", "average_booking_duration"]
         num_columns = (
-            features.select_dtypes(include=["number"])
+            X.select_dtypes(include=["number"])
             .columns.difference(binary_cols + zero_columns)
             .tolist()
         )
@@ -99,7 +96,5 @@ class Preprocessor(BaseEstimator, TransformerMixin):
         features_array = self.transformer.transform(X)
         features_names = self.transformer.get_feature_names_out()
         features = pd.DataFrame(features_array, columns=features_names, index=X.index)
-        dataset = features.assign(price=X["price"].values)
 
-        return dataset
-
+        return features

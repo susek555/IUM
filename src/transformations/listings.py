@@ -107,7 +107,7 @@ def add_amenity_count_attribute(df: pd.DataFrame):
     df["amenity_count"] = df["amenities"].apply(
         lambda x: len([a.strip().lower() for a in ast.literal_eval(x)])
         if pd.notna(x) and x.startswith("[")
-        else []
+        else 0
     )
 
 
@@ -149,7 +149,14 @@ def convert_tf_columns(df: pd.DataFrame, columns: list[str]):
 def transform_pipeline(df: pd.DataFrame) -> pd.DataFrame:
     percentage_attributes = ["host_response_rate", "host_acceptance_rate"]
     tf_attributes = ["host_is_superhost", "host_identity_verified", "instant_bookable"]
-    drop = ["longitude", "latitude", "bathrooms_text", "description", "neighborhood_overview", "amenities"]
+    drop = [
+        "longitude",
+        "latitude",
+        "bathrooms_text",
+        "description",
+        "neighborhood_overview",
+        "amenities",
+    ]
 
     df = df.loc[:, INITIAL_FEATURES].copy()
     add_distance_to_centre_attribute(df)

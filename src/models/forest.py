@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import cross_val_score
 from pathlib import Path
 
+
 @dataclass
 class Model:
     data: pd.DataFrame = None
@@ -16,7 +17,9 @@ class Model:
             data = data.drop(columns=["Unnamed: 0"])
         return data
 
-    def fit(self, data: pd.DataFrame = None, n_estimators: int = 100, cv: int = 5) -> None:
+    def fit(
+        self, data: pd.DataFrame = None, n_estimators: int = 100, cv: int = 5
+    ) -> None:
         if data is None:
             data = self.read_data_from_file()
         self.data = data
@@ -52,7 +55,7 @@ class Model:
         X_full = self.data.drop(columns=["price"])
 
         full_results = self.data.copy()
-        full_results['predicted_price'] = self.model.predict(X_full)
+        full_results["predicted_price"] = self.model.predict(X_full)
 
         return full_results
 
@@ -64,5 +67,3 @@ if __name__ == "__main__":
     save_dir = Path("./data/predictions")
     save_dir.mkdir(parents=True, exist_ok=True)
     results.to_csv(save_dir / "predictions.csv")
-
-

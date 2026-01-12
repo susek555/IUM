@@ -2,20 +2,19 @@ import numpy as np
 import pandas as pd
 
 
-def drop_browse_listings(df: pd.DataFrame) -> pd.DataFrame:
-    df[df["action"] != "browse_listings"]
+def drop_browse_listings(df: pd.DataFrame):
+    df.loc[df["action"] != "browse_listings"]
 
 
-def convert_timestamps_to_dates(df: pd.DataFrame) -> pd.DataFrame:
+def convert_timestamps_to_dates(df: pd.DataFrame):
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df["booking_date"] = pd.to_datetime(df["booking_date"], errors="coerce")
 
 
-def drop_records_older_than_one_year(
-    df: pd.DataFrame,
-) -> pd.DataFrame:
+def drop_records_older_than_one_year(df: pd.DataFrame):
     threshold = df["timestamp"].max() - pd.Timedelta(days=365)
     df.drop(df[df["timestamp"] < threshold].index, inplace=True)
+
 
 def get_views_last(df: pd.DataFrame) -> pd.DataFrame:
     views_series = df.loc[
@@ -31,9 +30,7 @@ def get_views_last(df: pd.DataFrame) -> pd.DataFrame:
     return result_df
 
 
-def get_unique_viewers_last(
-    df: pd.DataFrame, listings_df: pd.DataFrame
-) -> pd.DataFrame:
+def get_unique_viewers_last(df: pd.DataFrame, listings_df: pd.DataFrame):
     unique_counts = (
         df.loc[
             (df["action"] == "view_listing") & (df["listing_id"].notna()),
@@ -48,7 +45,7 @@ def get_unique_viewers_last(
     )
 
 
-def get_conversion_rate(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.DataFrame:
+def get_conversion_rate(df: pd.DataFrame, listings_df: pd.DataFrame):
     booking_counts = df.loc[df["action"] == "book_listing", "listing_id"].value_counts()
     num_bookings = listings_df["listing_id"].map(booking_counts).fillna(0)
     views = listings_df["listing_views_ltm"]
@@ -58,7 +55,7 @@ def get_conversion_rate(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.DataF
     )
 
 
-def get_average_lead_time(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.DataFrame:
+def get_average_lead_time(df: pd.DataFrame, listings_df: pd.DataFrame):
     bookings = df.loc[
         (df["action"] == "book_listing") & (df["booking_date"].notna()),
         ["listing_id", "timestamp", "booking_date"],
@@ -75,9 +72,7 @@ def get_average_lead_time(df: pd.DataFrame, listings_df: pd.DataFrame) -> pd.Dat
     )
 
 
-def get_average_booking_duration(
-    df: pd.DataFrame, listings_df: pd.DataFrame
-) -> pd.DataFrame:
+def get_average_booking_duration(df: pd.DataFrame, listings_df: pd.DataFrame):
     durations = df.loc[
         (df["action"] == "book_listing") & (df["booking_duration"].notna()),
         ["listing_id", "booking_duration"],
