@@ -130,7 +130,7 @@ def encode_amenities_binary(df: pd.DataFrame, amenities: list[str]):
         ).astype("Int64")
 
     new_df = pd.DataFrame(new_columns_data, index=df.index)
-    df = pd.concat([df, new_df], axis=1)
+    df[new_df.columns] = new_df
 
 
 def convert_percentage_columns(df: pd.DataFrame, columns: list[str]):
