@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import contextily as ctx
 from scipy.spatial import ConvexHull
+import matplotlib.patheffects as patheffects
 from matplotlib.colors import Normalize
 from pathlib import Path
 
@@ -115,6 +116,20 @@ def visualize_map(
 
             hull_loop = np.vstack((hull_points, hull_points[0]))
             ax.plot(hull_loop[:, 0], hull_loop[:, 1], color=color, lw=1.5, zorder=2)
+
+        centroid = points.mean(axis=0)
+        ax.text(
+            centroid[0],
+            centroid[1],
+            str(cluster_id),
+            ha="center",
+            va="center",
+            fontsize=10,
+            fontweight="bold",
+            color="black",
+            zorder=4,
+            path_effects=[patheffects.withStroke(linewidth=3, foreground="white")],
+        )
 
     try:
         ctx.add_basemap(ax, crs="EPSG:4326", source=ctx.providers.CartoDB.Positron)
