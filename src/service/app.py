@@ -38,7 +38,7 @@ async def predict_price(data: PredictionData):
         prediction=f"{prediction[0]:.4f}",
         real=data.price,
     )
-    return prediction
+    return {"prediction": float(prediction[0])}
 
 
 if __name__ == "__main__":
