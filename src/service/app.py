@@ -19,8 +19,8 @@ ADVANCED_MODEL = joblib.load("./models/forest_pipeline.joblib")
 app = FastAPI()
 
 
-# @app.post("/predict")
-def predict_price(data: PredictionData):
+@app.post("/predict")
+async def predict_price(data: PredictionData):
     random_number = random.uniform(0, 1)
     if random_number < 0.5:
         model = BASE_MODEL
