@@ -62,7 +62,7 @@ def visualize_results_compare(
 
 
 def visualize_map(
-    differences: np.ndarray, clusters: np.ndarray, listings: pd.DataFrame
+    differences: np.ndarray, clusters: np.ndarray, listings: pd.DataFrame, title: str = None
 ) -> None:
     results = pd.DataFrame({"price_spread": differences, "cluster_id": clusters})
     results = pd.concat([results, listings[["longitude", "latitude"]]], axis=1)
@@ -138,7 +138,7 @@ def visualize_map(
     cb = plt.colorbar(sm, ax=ax, fraction=0.046, pad=0.04)
     cb.set_label("Median price differences")
 
-    ax.set_title("Price differences grouped by regions")
+    ax.set_title("Price differences grouped by regions" if not title else title)
     plt.tight_layout()
     plt.show()
 
