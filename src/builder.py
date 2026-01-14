@@ -1,12 +1,7 @@
-import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 import src.transformations.listings as listings_transforms
 import src.transformations.sessions as sessions_transforms
-import src.transformations.target as target_transforms
-from src.service.app import predict_price
-from src.service.model import PredictionData
 
 
 class FeatureBuilder(BaseEstimator, TransformerMixin):

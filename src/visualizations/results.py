@@ -1,27 +1,10 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import contextily as ctx
-from scipy.spatial import ConvexHull
 import matplotlib.patheffects as patheffects
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from matplotlib.colors import Normalize
-from pathlib import Path
-
-
-def save_price_spreads(
-    differences: np.ndarray, clusters: np.ndarray, listings: pd.DataFrame
-) -> None:
-    dataset = pd.read_csv("./data/processed/dataset.csv")
-    results = pd.read_csv("./data/predictions/predictions.csv")
-
-    dataset["predicted_price"] = results["predicted_price"]
-    dataset["price_spread"] = dataset["price"] - dataset["predicted_price"]
-
-    save_dir = Path("./data/analysis")
-    save_dir.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(
-        dataset[["latitude", "longitude", "cluster_id", "price_spread"]]
-    ).to_csv(save_dir / "price_spreads.csv", index=False)
+from scipy.spatial import ConvexHull
 
 
 def visualize_results(
@@ -30,7 +13,7 @@ def visualize_results(
     results = pd.DataFrame({"difference": differences, "cluster_id": clusters})
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(20, 10))
+        _, ax = plt.subplots(figsize=(20, 10))
 
     results.boxplot(
         column="difference", by="cluster_id", grid=False, showfliers=False, ax=ax
@@ -52,7 +35,7 @@ def visualize_results_compare(
     label1: str = "Linear",
     label2: str = "Random Forest",
 ) -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(20, 8), sharey=True)
+    _, axes = plt.subplots(1, 2, figsize=(20, 8), sharey=True)
 
     visualize_results(diffs1, clusters, ax=axes[0], title=label1)
     visualize_results(diffs2, clusters, ax=axes[1], title=label2)
@@ -67,7 +50,7 @@ def visualize_map(
     results = pd.DataFrame({"price_spread": differences, "cluster_id": clusters})
     results = pd.concat([results, listings[["longitude", "latitude"]]], axis=1)
 
-    fig, ax = plt.subplots(figsize=(12, 10))
+    _, ax = plt.subplots(figsize=(12, 10))
     cluster_stats = results.groupby("cluster_id")["price_spread"].median().reset_index()
 
     v_abs = max(
@@ -141,9 +124,3 @@ def visualize_map(
     ax.set_title("Price differences grouped by regions" if not title else title)
     plt.tight_layout()
     plt.show()
-
-
-if __name__ == "__main__":
-    save_price_spreads()
-    visualize_results()
-    visualize_map()

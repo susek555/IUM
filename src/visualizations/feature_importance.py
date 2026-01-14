@@ -1,5 +1,5 @@
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def visualize_feature_importance_tables(pipe):
@@ -21,7 +21,7 @@ def visualize_feature_importance_tables(pipe):
     bottom_10 = df.tail(10).copy()
     bottom_10["importance"] = bottom_10["importance"].round(4)
 
-    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
+    _, axes = plt.subplots(1, 2, figsize=(16, 8))
 
     for i, (data, title) in enumerate(
         [
